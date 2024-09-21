@@ -11,9 +11,9 @@ class SelfAttention(nn.Module):
         self.head_dim = embed_size // heads
         
         assert (self.head_dim * heads == embed_size), "Embed size needs to be divisible by heads"
-        self.values = nn.Linear(embed_size, embed_size, bias=False)
+        self.values = nn.Linear(embed_size, embed_size, bias=False) 
         self.keys = nn.Linear(embed_size, embed_size, bias=False)
-        self.queries = nn.Linear(embed_size, embed_size, bias=False)
+        self.queries = nn.Linear(embed_size, embed_size, bias=False) # TODO: according to paper this should be WiQ ∈ Rdmodel ×dk, so instead of embed_dim, it should be head_size?
         self.fc_out = nn.Linear(heads*self.head_dim, embed_size) # concat them
         
     def forward(self, values, keys, query, mask):
@@ -36,7 +36,7 @@ class SelfAttention(nn.Module):
         if mask is not None:
             energy = energy.masked_fill(mask == 0, float("-1e20"))
             
-        attention = torch.softmax(energy / (self.embed_size ** (1/2)), dim=3)
+        attention = torch.softmax(energy / (self.embed_size ** (1/2)), dim=3) # TODO: according to paper we should divide by head_dim ** (1/2) here or check if it has expected value = 0 and std = 1
         # since value_len == key_len i use l for both
         out = torch.einsum("nhql,nlhd->nqhd", [attention, values]).reshape(
             N, query_len, self.heads*self.head_dim,
